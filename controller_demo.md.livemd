@@ -1,0 +1,85 @@
+# Controller Demos
+
+## Bang-bang controller
+
+```elixir
+alias VegaLite, as: Vl
+import ControlLoop.BangBangController, only: :macros
+alias ControlLoop.BangBangController, as: BBC
+
+c = bb_controller(setpoint: 1, output_off: 2, output_on: 3)
+
+x = -100..100
+
+y =
+  Enum.map(x, fn i ->
+    {val, _} = BBC.update(c, i)
+    val
+  end)
+
+Vl.new(width: 400, height: 400)
+|> Vl.data_from_series(x: x, y: y)
+|> Vl.mark(:line)
+|> Vl.encode_field(:x, "x", type: :quantitative)
+|> Vl.encode_field(:y, "y", type: :quantitative)
+```
+
+## Hysteretical Bang Bang Controller
+
+```elixir
+alias VegaLite, as: Vl
+import ControlLoop.HystereticBangBangController, only: :macros
+alias ControlLoop.HystereticBangBangController, as: HBBC
+
+c = hbb_controller(setpoint_start: -50, setpoint_end: 50, output_off: 2, output_on: 3)
+
+x_forward = -100..100
+
+y_forward =
+  Enum.scan(x_forward, {0, c}, fn x, {_, c} ->
+    HBBC.update(c, x)
+  end)
+  |> Enum.map(fn {x, _} -> x end)
+
+x_reverse = x_forward |> Enum.reverse()
+
+y_reverse =
+  Enum.scan(x_reverse, {0, c}, fn x, {_, c} ->
+    HBBC.update(c, x)
+  end)
+  |> Enum.map(fn {x, _} -> x end)
+
+x = Enum.concat(x_forward, x_reverse)
+y = Enum.concat(y_forward, y_reverse)
+
+Vl.new(width: 400, height: 400)
+|> Vl.data_from_series(x: x, y: y)
+|> Vl.mark(:point)
+|> Vl.encode_field(:x, "x", type: :quantitative)
+|> Vl.encode_field(:y, "y", type: :quantitative)
+```
+
+## PID Controller
+
+```elixir
+alias VegaLite, as: Vl
+import ControlLoop.PIDController, only: :macros
+alias ControlLoop.PIDController, as: PIDC
+
+c = pid_controller(k_i: 1, k_d: -0.1, k_p: 0.01)
+
+t = 0..1000 |> Enum.map(&(&1 / 100.0))
+x_new = t |> Enum.map(fn _ -> 0 end)
+
+y =
+  Enum.scan(t, {0, c}, fn x, {_, c} ->
+    PIDC.update(c, 1 - x, x)
+  end)
+  |> Enum.map(fn {x_in, _} -> x_in end)
+
+Vl.new(width: 800, height: 400)
+|> Vl.data_from_series(x: t, y: y)
+|> Vl.mark(:point)
+|> Vl.encode_field(:x, "x", type: :quantitative)
+|> Vl.encode_field(:y, "y", type: :quantitative)
+```
