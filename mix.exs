@@ -5,7 +5,7 @@ defmodule ControlLoop.MixProject do
     [
       app: :control_loop,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -21,8 +21,8 @@ defmodule ControlLoop.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:vega_lite, "~> 0.1.3", only: :dev},
+      {:kino, "~> 0.5.0", only: :dev}
     ]
   end
 end
